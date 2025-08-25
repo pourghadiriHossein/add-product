@@ -1,0 +1,109 @@
+.aminh-simple-add-wrapper {
+    max-width: 700px;
+    margin: 50px auto;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    background-color: #fff;
+    border-radius: 10px;
+}
+
+.aminh-simple-add-wrapper h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.col-6 {
+    flex: 1;
+}
+
+button.button-primary {
+    display: block;
+    width: 100%;
+    padding: 8px !important;
+    background-color: #0073aa;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button.button-primary:hover {
+    background-color: #005177;
+}
+.bg-red {
+    background-color: red;
+}
+#drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+    position: relative;
+    min-height: 150px;
+}
+#drop-area:hover {
+    background: #f9f9f9;
+}
+#drop-area input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2; /* بالاتر از تصویر، اما پایین تر از دکمه حذف */
+}
+#preview-image {
+    margin-top: 15px;
+    max-width: 80%;
+    max-height: 120px;
+    border-radius: 10px;
+    object-fit: contain;
+    z-index: 1;
+}
+#remove-image {
+    margin-top: 10px;
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 3;
+    position: relative;
+}
+#remove-image:hover {
+    background: #ff1a1a;
+}
