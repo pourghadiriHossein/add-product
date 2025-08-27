@@ -1,3 +1,4 @@
+// -------------------- Drop Area --------------------
 const dropArea = document.getElementById("drop-area");
 const input = document.getElementById("product_image");
 const preview = document.getElementById("preview-image");
@@ -47,25 +48,40 @@ function handleFile(file) {
   reader.readAsDataURL(file);
 }
 
-document
-  .getElementById("aminh-simple-add-form")
-  .addEventListener("submit", function (e) {
-    const regular = parseFloat(document.getElementById("regular_price").value);
-    const sale = parseFloat(document.getElementById("sale_price").value);
-
-    if (regular < 0 || sale < 0) {
-      e.preventDefault();
-      alert("قیمت‌ها نمی‌توانند کمتر از صفر باشند.");
-    }
-  });
-
-const form = document.getElementById("aminh-simple-add-form");
+// -------------------- Product Title --------------------
 const titleInput = document.getElementById("product_title");
-const categoryInput = document.getElementById("product_category");
-const stockInput = document.getElementById("stock_status");
-const imageInput = document.getElementById("product_image");
+titleInput.addEventListener("input", () => {
+  let val = titleInput.value.replace(/[^\d\s]/g, "");
+  val = val.replace(/\s+/g, " ");
+  titleInput.value = val;
+  titleInput.style.direction = "ltr";
+});
+
+// -------------------- Price Inputs --------------------
 const regularInput = document.getElementById("regular_price");
 const saleInput = document.getElementById("sale_price");
+
+function formatPriceInput(input) {
+  input.addEventListener("input", () => {
+    let raw = input.value.replace(/\D/g, "");
+    if (!raw) {
+      input.value = "";
+      return;
+    }
+    input.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  });
+
+  input.form.addEventListener("submit", () => {
+    input.value = input.value.replace(/,/g, "");
+  });
+}
+
+formatPriceInput(regularInput);
+formatPriceInput(saleInput);
+
+// -------------------- Form Validation --------------------
+const form = document.getElementById("aminh-simple-add-form");
+const imageInput = document.getElementById("product_image");
 
 function showError(input, message) {
   let error = input.parentElement.querySelector(".aminh-error");
@@ -88,6 +104,7 @@ function clearError(input) {
 function validateForm() {
   let valid = true;
 
+  // شماره سیم کارت
   if (!titleInput.value.trim()) {
     showError(titleInput, "شماره سیم کارت نمی‌تواند خالی باشد.");
     valid = false;
@@ -95,92 +112,74 @@ function validateForm() {
     clearError(titleInput);
   }
 
-  if (!categoryInput.value) {
-    showError(categoryInput, "یک دسته بندی انتخاب کنید.");
-    valid = false;
-  } else {
-    clearError(categoryInput);
-  }
-
-  if (!stockInput.value) {
-    showError(stockInput, "وضعیت شماره را انتخاب کنید.");
-    valid = false;
-  } else {
-    clearError(stockInput);
-  }
-
-  if (!imageInput.files || imageInput.files.length === 0) {
+  const productId = document.querySelector('input[name="product_id"]').value;
+  if (productId == "0" && (!imageInput.files || imageInput.files.length === 0)) {
     showError(imageInput, "یک تصویر انتخاب کنید.");
     valid = false;
   } else {
     clearError(imageInput);
   }
 
-  let regular = parseFloat(regularInput.value);
-  let sale = parseFloat(saleInput.value);
-
-  if (isNaN(regular) || regular < 1) {
-    regular = 1;
+  const regular = parseInt(regularInput.value.replace(/,/g, ""), 10) || 0;
+  if (regular < 1) {
     showError(regularInput, "قیمت عادی نمی‌تواند کمتر از 1 باشد.");
     valid = false;
   } else {
     clearError(regularInput);
   }
-  regularInput.value = regular;
 
-  if (sale > regular) {
-    sale = regular;
+  const sale = parseInt(saleInput.value.replace(/,/g, ""), 10) || 0;
+  if (sale > 0 && sale > regular) {
     showError(saleInput, "قیمت تخفیف نمی‌تواند بیشتر از قیمت عادی باشد.");
     valid = false;
   } else {
     clearError(saleInput);
   }
-  saleInput.value = sale;
 
   return valid;
 }
 
-function sanitizeRegularPrice(input) {
-  input.addEventListener("input", () => {
-    let val = input.value.replace(/\D/g, "");
-    val = val.replace(/^0+/, ""); 
-    if (val === "") val = ""; 
-    input.value = val;
-  });
-}
+let formIsSubmitting = false;
 
-function sanitizeSalePrice(input, regularInput) {
-  input.addEventListener("input", () => {
-    let val = input.value.replace(/\D/g, "");
-    val = val.replace(/^0+/, "");
-
-    if (val === "") {
-      input.value = "";
-      return;
-    }
-
-    val = parseInt(val);
-    if (val < 1) val = 1;
-    const regularVal = parseInt(regularInput.value);
-    if (val > regularVal) val = regularVal;
-    input.value = val;
-  });
-}
-
-sanitizeRegularPrice(regularInput);
-sanitizeSalePrice(saleInput, regularInput);
-
-form.addEventListener("submit", function (e) {
+form.addEventListener("submit", (e) => {
+  if (formIsSubmitting) {
+    e.preventDefault();
+    return;
+  }
+  
   if (!validateForm()) {
     e.preventDefault();
+    const firstError = document.querySelector(".aminh-error");
+    if (firstError) {
+      firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return;
   }
+  
+  formIsSubmitting = true;
+  
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = 'در حال ارسال...';
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    const existingImage = document.querySelector('#preview-image[src]');
-    if (existingImage && existingImage.src) {
-        preview.style.display = "block";
-        removeBtn.style.display = "inline-block";
-        dropText.style.display = "none";
-    }
+const allInputs = form.querySelectorAll("input, select");
+allInputs.forEach(input => {
+  input.addEventListener("input", () => {
+    clearError(input);
+  });
+  input.addEventListener("change", () => {
+    clearError(input);
+  });
+});
+
+// -------------------- Preload existing image --------------------
+document.addEventListener("DOMContentLoaded", function () {
+  const existingImage = document.querySelector("#preview-image");
+
+  if (existingImage && existingImage.src) {
+    preview.style.display = "block";
+    removeBtn.style.display = "inline-block";
+    dropText.style.display = "none";
+  }
 });
