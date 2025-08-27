@@ -19,6 +19,10 @@ if (!class_exists('AminHAddProduct')) {
             if (!defined('AminHAddProduct_PATH')) define('AminHAddProduct_PATH', plugin_dir_path(__FILE__));
             if (!defined('AminHAddProduct_URL'))  define('AminHAddProduct_URL',  plugin_dir_url(__FILE__));
 
+            if (!session_id()) {
+                session_start();
+            }
+
             // WP hooks
             add_action('init', [$this, 'initialize']);
             add_action('admin_enqueue_scripts', [$this, 'enqueue_styles_and_scripts']);
@@ -26,6 +30,8 @@ if (!class_exists('AminHAddProduct')) {
             add_action('admin_init', [$this, 'ensure_attributes_and_terms'], 20);
             add_action('init', [$this, 'register_attribute_taxonomies_if_needed'], 11);
             add_action('init', [$this, 'ensure_terms_if_needed'], 99);
+
+            add_action('admin_init', [$this, 'clear_session_messages']);
         }
 
         public function initialize()
@@ -33,6 +39,50 @@ if (!class_exists('AminHAddProduct')) {
             add_action('admin_menu', [$this, 'register_admin_pages']);
             add_filter('post_row_actions', [$this, 'add_simple_edit_link'], 10, 2);
             add_action('admin_post_aminh_add_product', [$this, 'handle_form_submission']);
+            add_action('admin_notices', [$this, 'admin_notices']);
+
+            add_action('admin_head', [$this, 'add_admin_styles']);
+            add_action('wp_head', [$this, 'add_custom_css_in_head']);
+            add_action('admin_head', [$this, 'add_custom_admin_css']);
+        }
+
+        public function add_custom_css_in_head()
+        {
+            echo '<style>
+                    .product_title {
+                        direction: ltr !important;
+                    }
+
+                    .wd-last {
+                        direction: ltr !important;
+                    }
+                </style>';
+        }
+
+        public function add_custom_admin_css()
+        {
+            echo '<style>
+                    #titlediv #title {
+                        direction: ltr !important;
+                        text-align: right !important;
+                    }
+                </style>';
+        }
+
+        public function add_admin_styles()
+        {
+            if (isset($_GET['post_type']) && $_GET['post_type'] === 'product') {
+                echo '<style>
+                        .wp-list-table .column-name {
+                            direction: ltr !important;
+                            text-align: right !important;
+                        }
+                        #titlediv #title {
+                            direction: ltr !important;
+                            text-align: right !important;
+                        }
+                    </style>';
+            }
         }
 
         public function enqueue_styles_and_scripts($hook_suffix = '')
@@ -67,7 +117,7 @@ if (!class_exists('AminHAddProduct')) {
             ]);
 ?>
             <div class="aminh-simple-add-wrapper">
-                <h1><?php echo $product_id ? 'ویرایش محصول' : 'افزودن محصول جدید'; ?></h1>
+                <h1><?php echo $product_id ? 'ویرایش سیم کارت' : 'افزودن سیم کارت جدید'; ?></h1>
                 <form id="aminh-simple-add-form" method="post" enctype="multipart/form-data" action="<?php echo admin_url('admin-post.php'); ?>">
                     <?php wp_nonce_field('aminh_simple_add_product', 'aminh_simple_add_nonce'); ?>
                     <input type="hidden" name="action" value="aminh_add_product">
@@ -75,16 +125,19 @@ if (!class_exists('AminHAddProduct')) {
 
                     <div class="form-group full-width">
                         <label for="product_title">شماره سیم کارت</label>
-                        <input type="text" id="product_title" name="product_title" value="<?php echo $product ? esc_attr($product->get_name()) : ''; ?>">
+                        <input type="text" id="product_title" name="product_title" class="ltr-input" value="<?php echo $product ? esc_attr($product->get_name()) : ''; ?>">
                     </div>
+
                     <div class="form-group full-width">
                         <label for="regular_price">قیمت عادی</label>
-                        <input type="number" id="regular_price" name="_regular_price" min="0" value="<?php echo $product ? esc_attr($product->get_regular_price()) : ''; ?>">
+                        <input type="text" id="regular_price" name="_regular_price" value="<?php echo $product ? esc_attr($product->get_regular_price()) : ''; ?>">
                     </div>
+
                     <div class="form-group full-width">
                         <label for="sale_price">قیمت با تخفیف</label>
-                        <input type="number" id="sale_price" name="_sale_price" min="0" value="<?php echo $product ? esc_attr($product->get_sale_price()) : ''; ?>">
+                        <input type="text" id="sale_price" name="_sale_price" value="<?php echo $product ? esc_attr($product->get_sale_price()) : ''; ?>">
                     </div>
+
                     <div class="form-row">
                         <div class="form-group col-6">
                             <label for="product_category">دسته بندی</label>
@@ -149,18 +202,18 @@ if (!class_exists('AminHAddProduct')) {
                                 }
                             }
                         ?>
-                        <div class="form-group col-6">
-                            <label for="<?php echo esc_attr($taxonomy); ?>"><?php echo esc_html($attr['label']); ?></label>
-                            <select id="<?php echo esc_attr($taxonomy); ?>" name="aminh_attr[<?php echo esc_attr($taxonomy); ?>]">
-                                <option value="">انتخاب کنید</option>
-                                <?php
-                                foreach ($terms as $term) {
-                                    $selected = ($selected_term === $term->slug) ? 'selected' : '';
-                                    echo '<option value="' . esc_attr($term->slug) . '" ' . $selected . '>' . esc_html($term->name) . '</option>';
-                                }
-                                ?>
-                            </select>
-                        </div>
+                            <div class="form-group col-6">
+                                <label for="<?php echo esc_attr($taxonomy); ?>"><?php echo esc_html($attr['label']); ?></label>
+                                <select id="<?php echo esc_attr($taxonomy); ?>" name="aminh_attr[<?php echo esc_attr($taxonomy); ?>]">
+                                    <option value="">انتخاب کنید</option>
+                                    <?php
+                                    foreach ($terms as $term) {
+                                        $selected = ($selected_term === $term->slug) ? 'selected' : '';
+                                        echo '<option value="' . esc_attr($term->slug) . '" ' . $selected . '>' . esc_html($term->name) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
                         <?php } ?>
                     </div>
 
@@ -181,22 +234,22 @@ if (!class_exists('AminHAddProduct')) {
                                 }
                             }
                         ?>
-                        <div class="form-group col-6">
-                            <label for="<?php echo esc_attr($taxonomy); ?>"><?php echo esc_html($attr['label']); ?></label>
-                            <select id="<?php echo esc_attr($taxonomy); ?>" name="aminh_attr[<?php echo esc_attr($taxonomy); ?>]">
-                                <option value="">انتخاب کنید</option>
-                                <?php
-                                foreach ($terms as $term) {
-                                    $selected = ($selected_term === $term->slug) ? 'selected' : '';
-                                    echo '<option value="' . esc_attr($term->slug) . '" ' . $selected . '>' . esc_html($term->name) . '</option>';
-                                }
-                                ?>
-                            </select>
-                        </div>
+                            <div class="form-group col-6">
+                                <label for="<?php echo esc_attr($taxonomy); ?>"><?php echo esc_html($attr['label']); ?></label>
+                                <select id="<?php echo esc_attr($taxonomy); ?>" name="aminh_attr[<?php echo esc_attr($taxonomy); ?>]">
+                                    <option value="">انتخاب کنید</option>
+                                    <?php
+                                    foreach ($terms as $term) {
+                                        $selected = ($selected_term === $term->slug) ? 'selected' : '';
+                                        echo '<option value="' . esc_attr($term->slug) . '" ' . $selected . '>' . esc_html($term->name) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
                         <?php } ?>
                     </div>
                     <div class="form-group">
-                        <label>تصویر محصول</label>
+                        <label>تصویر سیم کارت</label>
                         <div id="drop-area">
                             <p id="drop-text">عکس را اینجا بکشید یا کلیک کنید</p>
                             <input type="file" id="product_image" name="product_image" accept="image/*">
@@ -205,13 +258,13 @@ if (!class_exists('AminHAddProduct')) {
                                 <img id="preview-image" src="<?php echo esc_url($image_url); ?>" alt="Preview">
                                 <button type="button" id="remove-image">حذف تصویر</button>
                             <?php else: ?>
-                                <img id="preview-image" src="" alt="Preview" style="display:none;">
+                                <img id="preview-image" alt="Preview" style="display:none;">
                                 <button type="button" id="remove-image" style="display:none;">حذف تصویر</button>
                             <?php endif; ?>
                         </div>
                     </div>
 
-                    <button type="submit" class="button button-primary"><?php echo $product_id ? 'بروزرسانی محصول' : 'افزودن محصول'; ?></button>
+                    <button type="submit" class="button button-primary"><?php echo $product_id ? 'بروزرسانی سیم کارت' : 'افزودن سیم کارت'; ?></button>
                 </form>
             </div>
 <?php
@@ -233,11 +286,30 @@ if (!class_exists('AminHAddProduct')) {
             }
 
             $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+            $action_state = $product_id == 0 ? 'added' : 'updated';
             $title = sanitize_text_field($_POST['product_title'] ?? '');
             $regular_price = floatval($_POST['_regular_price'] ?? 0);
             $sale_price = floatval($_POST['_sale_price'] ?? 0);
-            $stock_status = 'instock';
+            $stock_status = sanitize_text_field('instock');
             $categories = array_map('intval', $_POST['product_cat'] ?? []);
+
+            if (empty($title)) {
+                set_transient('aminh_notices', [
+                    'type' => 'error',
+                    'message' => 'شماره سیم کارت نمی‌تواند خالی باشد.'
+                ], 30);
+                wp_redirect(wp_get_referer());
+                exit;
+            }
+
+            if (empty($title)) {
+                $_SESSION['aminh_notices'] = [
+                    'type' => 'error',
+                    'message' => 'شماره سیم کارت نمی‌تواند خالی باشد.'
+                ];
+                wp_redirect(wp_get_referer());
+                exit;
+            }
 
             $product = $product_id ? wc_get_product($product_id) : new WC_Product_Simple();
 
@@ -261,7 +333,6 @@ if (!class_exists('AminHAddProduct')) {
                     set_post_thumbnail($product_id, $attachment_id);
                 }
             }
-
 
             if (!empty($_POST['aminh_attr']) && is_array($_POST['aminh_attr'])) {
                 $attributes_meta = array();
@@ -290,8 +361,55 @@ if (!class_exists('AminHAddProduct')) {
                 update_post_meta($product_id, '_product_attributes', $attributes_meta);
             }
 
-            wp_redirect(admin_url('edit.php?post_type=product'));
+            wp_redirect(add_query_arg('aminh_success', $action_state, wp_get_referer()));
             exit;
+        }
+
+        public function admin_notices()
+        {
+            if (isset($_GET['aminh_success'])) {
+                $message = '';
+                $type = 'success';
+
+                switch ($_GET['aminh_success']) {
+                    case 'added':
+                        $message = 'سیم کارت با موفقیت اضافه شد.';
+                        break;
+                    case 'updated':
+                        $message = 'سیم کارت با موفقیت بروزرسانی شد.';
+                        break;
+                }
+
+                if ($message) {
+                    echo '<div class="notice notice-' . esc_attr($type) . ' is-dismissible">';
+                    echo '<p>' . esc_html($message) . '</p>';
+                    echo '</div>';
+                }
+            }
+
+            if (isset($_GET['aminh_error'])) {
+                $message = '';
+                $type = 'error';
+
+                switch ($_GET['aminh_error']) {
+                    case 'empty_title':
+                        $message = 'شماره سیم کارت نمی‌تواند خالی باشد.';
+                        break;
+                }
+
+                if ($message) {
+                    echo '<div class="notice notice-' . esc_attr($type) . ' is-dismissible">';
+                    echo '<p>' . esc_html($message) . '</p>';
+                    echo '</div>';
+                }
+            }
+        }
+
+        public function clear_session_messages()
+        {
+            if (isset($_SESSION['aminh_notices'])) {
+                unset($_SESSION['aminh_notices']);
+            }
         }
 
         /** ---------- Attributes Spec ---------- */
@@ -338,6 +456,7 @@ if (!class_exists('AminHAddProduct')) {
                     'slug'  => 'contact',
                     'terms' => [
                         ['name' => '09123100700', 'slug' => '09123100700'],
+                        ['name' => '09124545745', 'slug' => '09124545745'],
                     ],
                 ],
             ];
