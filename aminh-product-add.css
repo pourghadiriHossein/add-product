@@ -14,6 +14,7 @@
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 .form-group label {
@@ -55,9 +56,16 @@ button.button-primary {
 button.button-primary:hover {
     background-color: #005177;
 }
+
+button.button-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
 .bg-red {
     background-color: red;
 }
+
 #drop-area {
     border: 2px dashed #ccc;
     border-radius: 10px;
@@ -72,9 +80,11 @@ button.button-primary:hover {
     position: relative;
     min-height: 150px;
 }
+
 #drop-area:hover {
     background: #f9f9f9;
 }
+
 #drop-area input[type="file"] {
     position: absolute;
     width: 100%;
@@ -83,8 +93,9 @@ button.button-primary:hover {
     left: 0;
     opacity: 0;
     cursor: pointer;
-    z-index: 2; /* بالاتر از تصویر، اما پایین تر از دکمه حذف */
+    z-index: 2;
 }
+
 #preview-image {
     margin-top: 15px;
     max-width: 80%;
@@ -93,6 +104,7 @@ button.button-primary:hover {
     object-fit: contain;
     z-index: 1;
 }
+
 #remove-image {
     margin-top: 10px;
     background: #ff4d4d;
@@ -104,6 +116,38 @@ button.button-primary:hover {
     z-index: 3;
     position: relative;
 }
+
 #remove-image:hover {
     background: #ff1a1a;
+}
+
+.ltr-input {
+    direction: ltr !important;
+    text-align: right !important;
+    font-family: monospace !important; 
+}
+
+.aminh-error {
+    color: #dc3232 !important;
+    font-size: 12px !important;
+    margin-top: 4px !important;
+    font-weight: normal !important;
+}
+
+input.error, select.error {
+    border-color: #dc3232 !important;
+}
+
+.notice.aminh-notice {
+    border-right: 4px solid #46b450;
+    padding: 10px 12px;
+    margin: 15px 0;
+}
+
+.notice.aminh-notice.error {
+    border-right-color: #dc3232;
+}
+
+.notice.aminh-notice.success {
+    border-right-color: #46b450;
 }
