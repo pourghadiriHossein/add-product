@@ -104,7 +104,6 @@ function clearError(input) {
 function validateForm() {
   let valid = true;
 
-  // شماره سیم کارت
   if (!titleInput.value.trim()) {
     showError(titleInput, "شماره سیم کارت نمی‌تواند خالی باشد.");
     valid = false;
@@ -113,27 +112,14 @@ function validateForm() {
   }
 
   const productId = document.querySelector('input[name="product_id"]').value;
-  if (productId == "0" && (!imageInput.files || imageInput.files.length === 0)) {
+  if (
+    productId == "0" &&
+    (!imageInput.files || imageInput.files.length === 0)
+  ) {
     showError(imageInput, "یک تصویر انتخاب کنید.");
     valid = false;
   } else {
     clearError(imageInput);
-  }
-
-  const regular = parseInt(regularInput.value.replace(/,/g, ""), 10) || 0;
-  if (regular < 1) {
-    showError(regularInput, "قیمت عادی نمی‌تواند کمتر از 1 باشد.");
-    valid = false;
-  } else {
-    clearError(regularInput);
-  }
-
-  const sale = parseInt(saleInput.value.replace(/,/g, ""), 10) || 0;
-  if (sale > 0 && sale > regular) {
-    showError(saleInput, "قیمت تخفیف نمی‌تواند بیشتر از قیمت عادی باشد.");
-    valid = false;
-  } else {
-    clearError(saleInput);
   }
 
   return valid;
@@ -146,7 +132,7 @@ form.addEventListener("submit", (e) => {
     e.preventDefault();
     return;
   }
-  
+
   if (!validateForm()) {
     e.preventDefault();
     const firstError = document.querySelector(".aminh-error");
@@ -155,16 +141,16 @@ form.addEventListener("submit", (e) => {
     }
     return;
   }
-  
+
   formIsSubmitting = true;
-  
+
   const submitButton = form.querySelector('button[type="submit"]');
   submitButton.disabled = true;
-  submitButton.textContent = 'در حال ارسال...';
+  submitButton.textContent = "در حال ارسال...";
 });
 
 const allInputs = form.querySelectorAll("input, select");
-allInputs.forEach(input => {
+allInputs.forEach((input) => {
   input.addEventListener("input", () => {
     clearError(input);
   });
@@ -182,4 +168,30 @@ document.addEventListener("DOMContentLoaded", function () {
     removeBtn.style.display = "inline-block";
     dropText.style.display = "none";
   }
+});
+
+// ---------------------- Price Managment ---------------------------
+document.addEventListener("DOMContentLoaded", function () {
+  const priceTypeSelect = document.getElementById("pa_price_type");
+  const priceFields = document.getElementById("price-fields");
+  const regularInput = document.getElementById("regular_price");
+  const saleInput = document.getElementById("sale_price");
+
+  function togglePriceFields() {
+    if (priceTypeSelect.value === "priced") {
+      priceFields.style.display = "block";
+    } else {
+      priceFields.style.display = "none";
+      regularInput.value = "";
+      saleInput.value = "";
+    }
+  }
+
+  if (!priceTypeSelect.value) {
+    priceTypeSelect.value = "priced";
+  }
+
+  togglePriceFields();
+
+  priceTypeSelect.addEventListener("change", togglePriceFields);
 });
