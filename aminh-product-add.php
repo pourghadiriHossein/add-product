@@ -56,6 +56,10 @@ if (!class_exists('AminHAddProduct')) {
                     .wd-last {
                         direction: ltr !important;
                     }
+                    .wd-entities-title {
+                        direction: ltr !important;
+                        text-align: center !important;
+                    }
                 </style>';
         }
 
@@ -128,14 +132,16 @@ if (!class_exists('AminHAddProduct')) {
                         <input type="text" id="product_title" name="product_title" class="ltr-input" value="<?php echo $product ? esc_attr($product->get_name()) : ''; ?>">
                     </div>
 
-                    <div class="form-group full-width">
-                        <label for="regular_price">قیمت عادی</label>
-                        <input type="text" id="regular_price" name="_regular_price" value="<?php echo $product ? esc_attr($product->get_regular_price()) : ''; ?>">
-                    </div>
+                    <div id="price-fields">
+                        <div class="form-group full-width">
+                            <label for="regular_price">قیمت عادی</label>
+                            <input type="text" id="regular_price" name="_regular_price" value="<?php echo $product ? esc_attr($product->get_regular_price()) : ''; ?>">
+                        </div>
 
-                    <div class="form-group full-width">
-                        <label for="sale_price">قیمت با تخفیف</label>
-                        <input type="text" id="sale_price" name="_sale_price" value="<?php echo $product ? esc_attr($product->get_sale_price()) : ''; ?>">
+                        <div class="form-group full-width">
+                            <label for="sale_price">قیمت با تخفیف</label>
+                            <input type="text" id="sale_price" name="_sale_price" value="<?php echo $product ? esc_attr($product->get_sale_price()) : ''; ?>">
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -314,7 +320,9 @@ if (!class_exists('AminHAddProduct')) {
             $product = $product_id ? wc_get_product($product_id) : new WC_Product_Simple();
 
             $product->set_name($title);
-            $product->set_regular_price($regular_price);
+            if ($regular_price > 0) {
+                $product->set_regular_price($regular_price);
+            }
             if ($sale_price > 0) {
                 $product->set_sale_price($sale_price);
             }
