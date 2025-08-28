@@ -151,3 +151,8 @@ input.error, select.error {
 .notice.aminh-notice.success {
     border-right-color: #46b450;
 }
+
+#price-fields {
+    transition: all 0.3s ease;
+}
+
